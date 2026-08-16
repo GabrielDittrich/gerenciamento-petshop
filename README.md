@@ -10,11 +10,19 @@ A aplicação permite gerenciar clientes, animais e produtos por meio de uma **A
 
 ### Visão geral
 
-![Tela inicial do Gerenciamento Petshop](docs/screenshots/tela-principal.png)
+<img
+  src="docs/screenshots/tela-principal.png"
+  alt="Tela inicial do Gerenciamento Petshop"
+  width="800"
+/>
 
 ### Sistema em funcionamento
 
-![Demonstração do Gerenciamento Petshop](docs/demo/gerenciamento-petshop.gif)
+<img
+  src="docs/demo/gerenciamento-petshop.gif"
+  alt="Demonstração do Gerenciamento Petshop"
+  width="800"
+/>
 
 ---
 
