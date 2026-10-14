@@ -40,9 +40,9 @@ Além do desenvolvimento da aplicação, o projeto também utiliza **Docker Comp
 
 ## ✨ Funcionalidades
 
-- 👤 Cadastro e visualização de clientes
-- 🐶 Cadastro e visualização de animais
-- 📦 Cadastro e visualização de produtos
+- 👤 Cadastro, listagem, edição e exclusão de clientes
+- 🐶 Cadastro, listagem, edição e exclusão de animais
+- 📦 Cadastro, listagem, edição e exclusão de produtos
 - 💰 Exibição e formatação de valores de produtos
 - 🔄 Integração entre frontend e API REST
 - 🗄️ Persistência dos dados em MySQL
@@ -141,8 +141,9 @@ gerenciamento-petshop/
 │   └── README.md
 │
 ├── backend/
-│   ├── Controllers/
+│   ├── APIs/
 │   ├── Models/
+│   ├── Validation/
 │   ├── Migrations/
 │   ├── Dockerfile
 │   └── PetShopManagement.Api.csproj
@@ -249,11 +250,11 @@ O Docker Compose irá:
 
 Após a inicialização:
 
-| Serviço | Endereço |
-|---|---|
-| API | http://localhost:5119 |
+| Serviço | Endereço                      |
+| ------- | ----------------------------- |
+| API     | http://localhost:5119         |
 | Swagger | http://localhost:5119/swagger |
-| MySQL | localhost:3307 |
+| MySQL   | localhost:3307                |
 
 Dentro da rede Docker, a API acessa o banco através de:
 
@@ -329,12 +330,12 @@ http://localhost:3000
 
 Com todos os serviços iniciados:
 
-| Aplicação | Endereço |
-|---|---|
-| Frontend React | http://localhost:3000 |
-| Backend ASP.NET Core | http://localhost:5119 |
-| Swagger | http://localhost:5119/swagger |
-| MySQL | localhost:3307 |
+| Aplicação            | Endereço                      |
+| -------------------- | ----------------------------- |
+| Frontend React       | http://localhost:3000         |
+| Backend ASP.NET Core | http://localhost:5119         |
+| Swagger              | http://localhost:5119/swagger |
+| MySQL                | localhost:3307                |
 
 ---
 

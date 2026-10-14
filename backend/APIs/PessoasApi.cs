@@ -8,7 +8,6 @@ public static class PessoasApi
 
         var group = app.MapGroup("/pessoas");
 
-
         group.MapGet("/", async (BancoDeDados db) =>
             //select * from pessoas
             await db.Pessoas.ToListAsync()
@@ -16,7 +15,16 @@ public static class PessoasApi
 
         group.MapPost("/", async (Pessoa pessoa, BancoDeDados db) =>
         {
+            var errors = PessoaValidator.Validar(pessoa);
+
+            if (errors.Count > 0)
+            {
+                return Results.ValidationProblem(errors);
+            }
+            pessoa.Telefone = PessoaValidator.NormalizarTelefone(pessoa.Telefone);
+
             db.Pessoas.Add(pessoa);
+
             //insert into...
             await db.SaveChangesAsync();
 
@@ -32,8 +40,16 @@ public static class PessoasApi
             {
                 return Results.NotFound();
             }
+
+            var errors = PessoaValidator.Validar(pessoaAlterada);
+
+            if (errors.Count > 0)
+            {
+                return Results.ValidationProblem(errors);
+            }
+
             pessoa.Nome = pessoaAlterada.Nome;
-            pessoa.Telefone = pessoaAlterada.Telefone;
+            pessoa.Telefone = PessoaValidator.NormalizarTelefone(pessoaAlterada.Telefone);
             pessoa.Email = pessoaAlterada.Email;
 
             //update....

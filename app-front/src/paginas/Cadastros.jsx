@@ -16,12 +16,17 @@ const sectionConfig = {
         label: "Nome",
         type: "text",
         placeholder: "Ex.: Ana Martins",
+        required: true,
+        maxLength: 100,
       },
       {
         name: "telefone",
         label: "Telefone",
         type: "text",
         inputMode: "numeric",
+        required: true,
+        pattern: "[0-9]{2} [0-9]{4,5}-[0-9]{4}",
+        title: "Informe o DDD e um telefone com 10 ou 11 dígitos.",
         placeholder: "41 99999-9999",
       },
       {
@@ -29,6 +34,8 @@ const sectionConfig = {
         label: "Email",
         type: "email",
         placeholder: "ana@email.com",
+        required: true,
+        maxLength: 254,
       },
     ],
     columns: [
@@ -52,18 +59,24 @@ const sectionConfig = {
         label: "Nome do pet",
         type: "text",
         placeholder: "Ex.: Thor",
+        required: true,
+        maxLength: 100,
       },
       {
         name: "raca",
         label: "Raca",
         type: "text",
         placeholder: "Ex.: Golden Retriever",
+        required: true,
+        maxLength: 100,
       },
       {
         name: "porte",
         label: "Porte",
         type: "text",
         placeholder: "Ex.: Medio",
+        required: true,
+        maxLength: 50,
       },
     ],
     columns: [
@@ -87,12 +100,16 @@ const sectionConfig = {
         label: "Nome",
         type: "text",
         placeholder: "Ex.: Shampoo antialergico",
+        maxLength: 100,
+        required: true,
       },
       {
         name: "descricao",
         label: "Descricao",
         type: "text",
         placeholder: "Hidratacao para peles sensiveis",
+        maxLength: 500,
+        required: true,
       },
       {
         name: "preco",
@@ -100,6 +117,9 @@ const sectionConfig = {
         type: "text",
         inputMode: "decimal",
         placeholder: "Ex.: 39,90",
+        required: true,
+        pattern: "[0-9]{1,8}(,[0-9]{1,2})?",
+        title: "Informe um preço maior que zero, como 39,90.",
       },
     ],
     columns: [
@@ -134,6 +154,39 @@ function sanitizeDecimalInput(value) {
   return decimalPart ? `${integerPart},${decimalPart}` : `${integerPart},`;
 }
 
+function getSaveErrorMessage(error, config) {
+  const errors = error.response?.data?.errors;
+
+  if (errors && typeof errors === "object") {
+    const messages = Object.entries(errors).flatMap(
+      ([fieldName, fieldErrors]) => {
+        const field = config.fields.find(
+          (item) => item.name.toLowerCase() === fieldName.toLowerCase(),
+        );
+
+        const label = field?.label ?? fieldName;
+        const fieldMessages = Array.isArray(fieldErrors)
+          ? fieldErrors
+          : [fieldErrors];
+
+        return fieldMessages
+          .filter(Boolean)
+          .map((message) => `${label}: ${message}`);
+      },
+    );
+
+    if (messages.length > 0) {
+      return messages.join(" | ");
+    }
+  }
+
+  return (
+    error.response?.data?.detail ??
+    error.response?.data?.title ??
+    `Nao foi possivel salvar ${config.title.toLowerCase()}.`
+  );
+}
+
 function formatPhoneInput(value) {
   const digits = String(value ?? "")
     .replace(/\D/g, "")
@@ -143,8 +196,12 @@ function formatPhoneInput(value) {
     return digits;
   }
 
-  if (digits.length <= 7) {
+  if (digits.length <= 6) {
     return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+  }
+
+  if (digits.length <= 10) {
+    return `${digits.slice(0, 2)} ${digits.slice(2, 6)}-${digits.slice(6)}`;
   }
 
   return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
@@ -211,8 +268,6 @@ function Cadastros() {
     const config = sectionConfig[type];
     const response = await axios.get(`${apiBaseUrl}/${config.endpoint}`);
 
-    console.log("DADOS RECEBIDOS", type, response.data);
-
     setData((current) => ({
       ...current,
       [type]: response.data,
@@ -273,8 +328,6 @@ function Cadastros() {
         },
       };
 
-      console.log("FORM ATUALIZADO", type, updated[type]);
-
       return updated;
     });
   }
@@ -320,8 +373,6 @@ function Cadastros() {
       payload.telefone = normalizePhone(form.telefone);
     }
 
-    console.log("SALVANDO", type, payload);
-
     try {
       if (form.id) {
         await axios.put(`${apiBaseUrl}/${config.endpoint}/${form.id}`, payload);
@@ -340,12 +391,49 @@ function Cadastros() {
       cancelForm(type);
       await loadSection(type);
     } catch (error) {
-      console.error(error);
+      if (process.env.NODE_ENV === "development") {
+        console.error(
+          "Falha ao salvar cadastro:",
+          error.response?.status,
+          error.response?.data ?? error.message,
+        );
+      }
+
       setFeedback({
         type: "error",
-        message: `Nao foi possivel salvar ${config.title.toLowerCase()}.`,
+        message: getSaveErrorMessage(error, config),
       });
     }
+  }
+
+  function handleFormSubmit(event, type) {
+    event.preventDefault();
+
+    const requiredInputs = Array.from(
+      event.currentTarget.querySelectorAll("input[required]"),
+    );
+    const blankInput = requiredInputs.find((input) => !input.value.trim());
+
+    if (blankInput) {
+      blankInput.setCustomValidity("Este campo é obrigatório.");
+      blankInput.reportValidity();
+      return;
+    }
+
+    if (type === "produto") {
+      const priceInput = event.currentTarget.elements.namedItem("preco");
+      const price = normalizePrice(forms.produto?.preco);
+
+      if (typeof price !== "number" || price <= 0) {
+        priceInput.setCustomValidity("Informe um preço maior que zero.");
+        priceInput.reportValidity();
+        return;
+      }
+
+      priceInput.setCustomValidity("");
+    }
+
+    saveForm(type);
   }
 
   async function deleteItem(type, id) {
@@ -481,20 +569,28 @@ function Cadastros() {
               </div>
 
               {form ? (
-                <form className="cadastro-form">
+                <form
+                  className="cadastro-form"
+                  onSubmit={(event) => handleFormSubmit(event, type)}
+                >
                   <div className="form-grid">
                     {config.fields.map((field) => (
                       <label key={field.name}>
                         <span>{field.label}</span>
                         <input
                           type={field.type}
+                          required={field.required}
+                          maxLength={field.maxLength}
+                          pattern={field.pattern}
+                          title={field.title}
                           inputMode={field.inputMode}
                           name={field.name}
                           placeholder={field.placeholder}
                           value={form[field.name] ?? ""}
-                          onChange={(event) =>
-                            updateForm(type, field.name, event.target.value)
-                          }
+                          onChange={(event) => {
+                            event.target.setCustomValidity("");
+                            updateForm(type, field.name, event.target.value);
+                          }}
                           onBlur={
                             field.name === "preco"
                               ? () => blurPriceInput(type)
@@ -506,11 +602,7 @@ function Cadastros() {
                   </div>
 
                   <div className="form-actions">
-                    <button
-                      className="primary-action"
-                      type="button"
-                      onClick={() => saveForm(type)}
-                    >
+                    <button className="primary-action" type="submit">
                       Salvar
                     </button>
                     <button

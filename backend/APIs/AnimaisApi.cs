@@ -13,6 +13,13 @@ public static class AnimaisApi
 
         group.MapPost("/", async (Animal animal, BancoDeDados db) =>
         {
+            var errors = AnimalValidator.Validar(animal);
+
+            if (errors.Count > 0)
+            {
+                return Results.ValidationProblem(errors);
+            }
+
             db.Animais.Add(animal);
             //insert into...
             await db.SaveChangesAsync();
@@ -25,14 +32,23 @@ public static class AnimaisApi
         {
             //select * from pessoas where id = ?
             var animal = await db.Animais.FindAsync(id);
+
             if (animal is null)
             {
                 return Results.NotFound();
             }
+
+            var errors = AnimalValidator.Validar(animalAlterado);
+
+            if (errors.Count > 0)
+            {
+                return Results.ValidationProblem(errors);
+            }
+
             animal.NomeAnimal = animalAlterado.NomeAnimal;
             animal.Raca = animalAlterado.Raca;
             animal.Porte = animalAlterado.Porte;
-            
+
             //update....
             await db.SaveChangesAsync();
 

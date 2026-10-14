@@ -27,13 +27,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection") ??
-    Environment.GetEnvironmentVariable("DB_CONNECTION");
+    Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
+}
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Configure a conexao do banco em ConnectionStrings:DefaultConnection, ConnectionStrings__DefaultConnection ou DB_CONNECTION.");
+        "Configure a conexão do banco em ConnectionStrings:DefaultConnection, " +
+        "ConnectionStrings__DefaultConnection ou DB_CONNECTION.");
 }
 
 builder.Services.AddDbContext<BancoDeDados>(options =>

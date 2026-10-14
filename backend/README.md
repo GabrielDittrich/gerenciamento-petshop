@@ -4,9 +4,9 @@ API ASP.NET Core do sistema de gerenciamento de petshop.
 
 ## Funcionalidades
 
-- Cadastro e listagem de pessoas/clientes
-- Cadastro e listagem de animais
-- Cadastro e listagem de produtos
+- Cadastro, listagem, edição e exclusão de pessoas/clientes
+- Cadastro, listagem, edição e exclusão de animais
+- Cadastro, listagem, edição e exclusão de produtos
 - Persistência de dados com MySQL
 - Migrations com Entity Framework Core
 - Documentação com Swagger
@@ -19,7 +19,8 @@ API ASP.NET Core do sistema de gerenciamento de petshop.
 backend
 ├── APIs
 ├── Migrations
-├── models
+├── Models
+├── Validation
 ├── Properties
 ├── BancoDeDados.cs
 ├── Program.cs
